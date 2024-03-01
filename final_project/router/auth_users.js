@@ -50,9 +50,42 @@ regd_users.post("/login", (req,res) => {
 
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
-});
+    if (!req.session.authorization) {
+      return res.status(401).json({message: "User not authorized for this action"});
+    }
+  
+    let username = req.session.authorization.username;
+    let isbn = req.params.isbn;
+  
+    if (books[isbn]) {
+      books[isbn].reviews[username] = req.body.review;
+      return res.status(200).send("Review successfully added");
+    } else {
+      return res.status(400).json({message: "No book with this isbn found"});
+    }
+  });
+
+  regd_users.delete("/auth/review/:isbn", (req, res) => {
+    if (!req.session.authorization) {
+      return res.status(401).json({message: "User not authorized for this action"});
+    }
+  
+    let username = req.session.authorization.username;
+    let isbn = req.params.isbn;
+  
+    if (books[isbn]) {
+        if(books[isbn].reviews[username]){
+            delete books[isbn].reviews[username]
+            return res.status(200).send("Review successfully deleted");
+        }
+        else{
+            return res.status(404).json({message: "No reviews from this user for this book"});
+        }
+    } 
+    else {
+      return res.status(404).json({message: "No book with this isbn found"});
+    }
+  });
 
 module.exports.authenticated = regd_users;
 module.exports.isValid = isValid;
